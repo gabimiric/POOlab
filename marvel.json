@@ -1,0 +1,32 @@
+[
+  {
+    "age": 2034,
+    "id": 2,
+    "isHumanoid": true,
+    "planet": "Asgard",
+    "traits": [
+      "BLONDE",
+      "TALL"
+    ]
+  },
+  {
+    "age": 0,
+    "id": 9,
+    "isHumanoid": true,
+    "planet": "Asgard",
+    "traits": [
+      "BLONDE",
+      "TALL"
+    ]
+  },
+  {
+    "age": 154,
+    "id": 16,
+    "isHumanoid": true,
+    "planet": "Unknown",
+    "traits": [
+      "BLONDE",
+      "TALL"
+    ]
+  }
+]
