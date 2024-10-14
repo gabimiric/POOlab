@@ -6,15 +6,15 @@ using json = nlohmann::json;
 
 // Enum definition
 enum Trait {
+    HAIRY,
+    TALL,
+    SHORT,
     BLONDE,
-    BULKY,
     EXTRA_ARMS,
     EXTRA_HEAD,
     GREEN,
-    HAIRY,
-    POINTY_EARS,
-    SHORT,
-    TALL
+    BULKY,
+    POINTY_EARS
 };
 
 // Class definition
@@ -149,43 +149,126 @@ class JsonReader
     }
 };
 
-// Class to print Passports
-class PassportPrinter {
-public:
-    /**
-      * Prints passport IDs based on specified criteria.
-      *
-      * @param passports The vector of Passport objects to print IDs from.
-      * @param printType Specifies the type of IDs to print:
-      *                  0 - All IDs
-      *                  1 - Odd IDs
-      *                  2 - Even IDs
-      * @param ascending If true, prints IDs in ascending order; if false, in descending order.
-      */
-    static void printIDs(const vector<Passport>& passports, int printType = 0, bool ascending = true)
-    {
-        vector<int> ids;
+class Classifier {
+    public:
 
-        // Collect relevant IDs based on printType
+    struct UniverseTraits {
+        string name;
+        string planet;
+        int maxAge;
+        bool isHumanoid;
+        vector<string> requiredTraits;
+    };
+
+    // Function to classify individuals into a universe based on their age, planet, traits, and isHumanoid status
+    static void classify(const vector<Passport>& passports)
+    {
+        // Reset existing files
+        resetFiles();
+
+        // Define the universes and their traits
+        vector<UniverseTraits> universes =
+        {
+            {"starWars", "Kashyyyk", 400, false, {"HAIRY", "TALL"}},
+            {"starWars", "Endor", 60, false, {"SHORT", "HAIRY"}},
+            {"marvel", "Asgard", 5000, true, {"BLONDE", "TALL"}},
+            {"hitchhiker", "Betelgeuse", 100, true, {"EXTRA_ARMS", "EXTRA_HEAD"}},
+            {"hitchhiker", "Vogsphere", 200, false, {"GREEN", "BULKY"}},
+            {"rings", "Earth", INT_MAX, true, {"BLONDE", "POINTY_EARS"}},
+            {"rings", "Earth", 200, true, {"SHORT", "BULKY"}}
+        };
+
         for (const auto& passport : passports)
         {
-            if (printType == 0 || (printType == 1 && passport.id % 2 != 0) || (printType == 2 && passport.id % 2 == 0))
-                ids.push_back(passport.id);
+            string classification = classifyIndividual(passport, universes);
+            if (classification != "Unknown Species")
+                classifyJSON(passport, classification); // Classify and save to the appropriate universe file
         }
-
-        // Sort IDs in ascending or descending order
-        if (ascending) {
-            sort(ids.begin(), ids.end());
-        } else {
-            sort(ids.rbegin(), ids.rend()); // Sort in descending order
-        }
-
-        // Print the collected IDs
-        cout << "\nPassport IDs:" << endl;
-        for (const auto& id : ids)
-            cout << id << " ";
     }
 
+
+    private:
+
+    static string classifyIndividual(const Passport& passport, const vector<UniverseTraits>& universes)
+    {
+        for (const auto& universe : universes)
+        {
+            // Check if the passport meets the universe's criteria
+            bool planetMatches = (passport.planet == universe.planet || passport.planet == "Unknown");
+            bool ageMatches = (passport.age <= universe.maxAge || passport.age == 0);
+            bool humanoidMatches = (passport.isHumanoid == universe.isHumanoid || passport.isHumanoid == false);
+            bool traitsMatch = hasTraits(passport, universe.requiredTraits) || passport.traits.empty();
+
+            // Classify if all criteria match
+            if (planetMatches && ageMatches && humanoidMatches && traitsMatch) {
+                return universe.name; // Return the universe name
+            }
+        }
+        return "Unknown Species"; // Default case if no match found
+    }
+
+
+    // Helper function to check if the passport has at least one of the required traits
+    static bool hasTraits(const Passport& passport, const vector<string>& requiredTraits) {
+        vector<string> traitStrings = passport.traitToString();  // Get the string representation of traits
+        for (const auto& trait : requiredTraits) {
+            if (find(traitStrings.begin(), traitStrings.end(), trait) != traitStrings.end())
+                return true;  // Return true if at least one required trait is present
+        }
+        return false;  // Return false if none of the required traits are found
+    }
+
+
+    // Function to append to the universe's JSON file
+    static void classifyJSON(const Passport& passport, const string& universe)
+    {
+        string filename = universe + ".json";
+        json jsonData;
+
+        // Check if file exists
+        ifstream infile(filename);
+        if (infile.good()) {
+            // File exists, read the existing data and append to it
+            infile >> jsonData;
+        }
+        infile.close();
+
+        // Create a JSON object for the current passport
+        json passportData;
+        passportData["id"] = passport.id;
+        passportData["isHumanoid"] = passport.isHumanoid;
+        passportData["planet"] = passport.planet;
+        passportData["age"] = passport.age;
+        passportData["traits"] = passport.traitToString();
+
+        // Append the new passport to the existing universe data
+        jsonData.push_back(passportData);
+
+        // Write the updated data back to the file
+        ofstream output(filename);
+        output << jsonData.dump(2);  // Pretty print with 2 spaces indentation
+        output.close();
+    }
+
+    // Function to delete/reset the files for the universes
+    static void resetFiles() {
+        // List of universe files to reset/delete
+        const vector<string> universeFiles = {
+            "starWars.json",
+            "marvel.json",
+            "hitchhiker.json",
+            "rings.json"
+        };
+
+        // Iterate through the list and delete each file
+        for (const auto& file : universeFiles) {
+            if (remove(file.c_str()) == 0) {
+                cout << "Deleted " << file << endl;
+            } else {
+                cout << "No existing file to delete: " << file << endl;
+            }
+        }
+    }
 };
 
 int main() {
@@ -197,23 +280,13 @@ int main() {
         // reader.print();
     }
 
-    // Access the filename directly if needed
-    // cout << "Reading from: " << reader.filename << endl;
-
     vector<Passport> passports;
     // Map JSON data to Passport objects
     for (const auto& alien : reader.data["input"]) {
         passports.push_back(Passport::fromJson(alien)); // Create Passport and add to vector
     }
 
-    // Print IDs
-    PassportPrinter::printIDs(passports, 0, true);  // All IDs, ascending
-    PassportPrinter::printIDs(passports, 0, false); // All IDs, descending
-    PassportPrinter::printIDs(passports, 1, true);  // Odd IDs, ascending
-    PassportPrinter::printIDs(passports, 1, false); // Odd IDs, descending
-    PassportPrinter::printIDs(passports, 2, true);  // Even IDs, ascending
-    PassportPrinter::printIDs(passports, 2, false); // Even IDs, descending
-
+    Classifier::classify(passports);
 
     return 0;
 }
