@@ -1,5 +1,4 @@
-#include <iostream>
-#include <string>
+#include <bits/stdc++.h>
 #include <nlohmann/json.hpp>
 
 using namespace std;
@@ -23,8 +22,8 @@ class passport {
     public:
 
     int id = 0;
-    bool isHumanoid = 0;
-    string planet = " ";
+    bool isHumanoid = false;
+    string planet = "Unknown";
     int age = 0;
     trait trait = BLONDE;
 
@@ -45,26 +44,75 @@ class passport {
     }
 };
 
+class JsonReader {
+    public:
+    json data;
+    string filename;
+
+    // Constructor that accepts the filename
+    JsonReader(const string filename) : filename(filename) {}
+
+    // Function to read the JSON file and store the content
+    bool read() {
+        // Open the JSON file
+        ifstream inputFile(filename);
+        if (!inputFile.is_open()) {
+            cerr << "Could not open the file: " << filename << endl;
+            return false; // Indicate failure
+        }
+
+        // Parse the JSON file
+        try {
+            inputFile >> data; // Store the parsed JSON data
+        } catch (const json::parse_error& e) {
+            cerr << "JSON parse error: " << e.what() << endl;
+            return false; // Indicate failure
+        }
+
+        // Close the file
+        inputFile.close();
+        return true; // Indicate success
+    }
+
+    // Function to print the stored JSON data
+    void print() const {
+        cout << data.dump(2) << endl; // Pretty print with 4 spaces indentation
+    }
+
+    // Function to print details of an alien by ID
+    void printAlienById(int id) const {
+        for (const auto& alien : data["input"]) {
+            if (alien["id"] == id) {
+                cout << "Alien Details (ID: " << id << "):" << endl;
+                cout << "Is Humanoid: " << (alien.value("isHumanoid", false) ? "Yes" : "No") << endl;
+                cout << "Planet: " << alien.value("planet", "Unknown") << endl;
+                cout << "Age: " << alien.value("age", 0) << endl;
+                cout << "Traits: ";
+                if (alien.contains("traits")) {
+                    for (const auto& trait : alien["traits"]) {
+                        cout << trait << " ";
+                    }
+                }
+                cout << endl; // New line after printing traits
+                return; // Exit after printing the found alien
+            }
+        }
+        cout << "No alien found with ID: " << id << endl; // If no alien is found
+    }
+};
+
 int main() {
-    cout << "Harro World" << endl;
+    JsonReader reader("input.json");
 
-    // Creating a passport object
-    passport pass;
-    pass.id = 2;
-    pass.isHumanoid = true;
-    pass.planet = "EARTH";
-    pass.age = 18;
-    pass.trait = BULKY;
+    // Read the JSON data
+    if (reader.read()) {
+        // Print the JSON data only if read was successful
+        reader.print();
+    }
 
-    // Outputting of the details of the passport object
-    cout << pass.id << ": Is this " << pass.traitToString() << " "
-    << pass.age << " year old creature from " << pass.planet
-    << " humanoid? " << (pass.isHumanoid ? "Yes" : "No") << endl;
+    // Access the filename directly if needed
+    cout << "Reading from: " << reader.filename << endl;
+    reader.printAlienById(2);
 
     return 0;
-
-    // ifstream f("example.json");
-    // json data = json::parse(f);
-    // string str = data.dump(1);
-    // cout<< str << endl;
 }
