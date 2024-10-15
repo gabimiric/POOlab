@@ -222,8 +222,14 @@ class Classifier {
     // Function to append to the universe's JSON file
     static void classifyJSON(const Passport& passport, const string& universe)
     {
-        string filename = universe + ".json";
+        string directory = "output/";
+        string filename = directory + universe + ".json";
         json jsonData;
+
+        // Ensure output directory exists
+        if (!filesystem::exists(directory)) {
+            filesystem::create_directory(directory);
+        }
 
         // Check if file exists
         ifstream infile(filename);
