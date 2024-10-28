@@ -142,27 +142,28 @@ int main(int argc, char *argv[])
         return 1; // Exit with error code
     }
 
-    string filePath = argv[1]; // Use command-line argument for the file path
-
     // Step 2: Read the file into a string
-    string fileContent = FileReader::readFileIntoString(filePath); // Read file content
-    if (fileContent.empty()) // Check for empty content (read failure)
-    {
-        cerr << "Failed to read the file at " << filePath << endl; // Print error message
-        return 1; // Exit with error code
+    for (int i = 1; i < argc; i++) { // Start at 1 to skip the program name
+        string filePath = argv[i];
+        string fileContent = FileReader::readFileIntoString(filePath); // Read file content
+
+        if (fileContent.empty()) { // Check for empty content (read failure)
+            cerr << "Failed to read the file at " << filePath << std::endl;
+            continue; // Move to the next file if there's a read failure
+        }
+
+        // Step 3: Create TextData object and analyze text
+        TextData textData(fileContent, filePath); // Create TextData object
+
+        // Step 4: Output the results
+        cout << "File Name: " << textData.getFilename() << endl; // Print file name
+        cout << "Text Content: " << textData.getText() << endl; // Print text content
+        cout << "\nNumber of Vowels: " << textData.getNumberOfVowels() << endl; // Print number of vowels
+        cout << "Number of Consonants: " << textData.getNumberOfConsonants() << endl; // Print number of consonants
+        cout << "Number of Letters: " << textData.getNumberOfLetters() << endl; // Print number of letters
+        cout << "Number of Sentences: " << textData.getNumberOfSentences() << endl; // Print number of sentences
+        cout << "Longest Word: " << textData.getLongestWord() << endl; // Print longest word
     }
-
-    // Step 3: Create TextData object and analyze text
-    TextData textData(fileContent, filePath); // Create TextData object
-
-    // Step 4: Output the results
-    cout << "File Name: " << textData.getFilename() << endl; // Print file name
-    cout << "Text Content: " << textData.getText() << endl; // Print text content
-    cout << "\nNumber of Vowels: " << textData.getNumberOfVowels() << endl; // Print number of vowels
-    cout << "Number of Consonants: " << textData.getNumberOfConsonants() << endl; // Print number of consonants
-    cout << "Number of Letters: " << textData.getNumberOfLetters() << endl; // Print number of letters
-    cout << "Number of Sentences: " << textData.getNumberOfSentences() << endl; // Print number of sentences
-    cout << "Longest Word: " << textData.getLongestWord() << endl; // Print longest word
 
     return 0; // Exit program
 }
