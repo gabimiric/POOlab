@@ -1,5 +1,4 @@
 #include <bits/stdc++.h>
-
 using namespace std;
 
 enum Intensity {
@@ -20,106 +19,96 @@ enum SyrupType {
 class Coffee {
 protected:
     Intensity coffeeIntensity;
-    const string name = "Coffee";
+    string coffeeName;
 
 public:
-    Coffee(Intensity intensity) : coffeeIntensity(intensity)
-    {
-    }
+    Coffee(Intensity intensity, const string &name) : coffeeIntensity(intensity), coffeeName(name)
+    {}
 
-    virtual void display() const
+    virtual void printCoffeeDetails() const
     {
-        cout << "Coffee Name: " << name << ", Intensity: " << coffeeIntensity << endl;
+        cout << "\nCoffee Name: " << coffeeName
+                << "\nIntensity: " << coffeeIntensity << endl;
     }
 };
 
 class Americano : public Coffee {
-    // Americano inherits from Coffee
 protected:
     int mlOfWater;
-    const string coffeeName = "Americano";
 
 public:
-    Americano(Intensity intensity, int water) : Coffee(intensity), mlOfWater(water)
-    {
-    }
+    Americano(Intensity intensity, int water) : Coffee(intensity, "Americano"), mlOfWater(water)
+    {}
 
-    void display() const override
+    void printCoffeeDetails() const override
     {
-        cout << "Coffee Name: " << coffeeName << ", Intensity: " << coffeeIntensity
-                << ", Water: " << mlOfWater << " ml" << endl;
+        Coffee::printCoffeeDetails();
+        cout << "Water: " << mlOfWater << " ml" << endl;
     }
 };
 
 class Cappuccino : public Coffee {
-    // Cappuccino inherits from Americano
 protected:
     int mlOfMilk;
-    const string coffeeName = "Cappuccino";
 
 public:
-    Cappuccino(Intensity intensity, int milk)
-        : Coffee(intensity), mlOfMilk(milk)
-    {
-    }
+    Cappuccino(Intensity intensity, int milk) : Coffee(intensity, "Cappuccino"), mlOfMilk(milk)
+    {}
 
-    void display() const override
+    void printCoffeeDetails() const override
     {
-        cout << "Coffee Name: " << coffeeName << ", Intensity: " << coffeeIntensity
-                << ", Milk: " << mlOfMilk << " ml" << endl;
+        Coffee::printCoffeeDetails();
+        cout << "Milk: " << mlOfMilk << " ml" << endl;
     }
 };
 
 class SyrupCappuccino : public Cappuccino {
-    // SyrupCappuccino inherits from Cappuccino
 protected:
     SyrupType syrup;
-    const string coffeeName = "SyrupCappuccino";
 
 public:
     SyrupCappuccino(Intensity intensity, int milk, SyrupType syrupType)
         : Cappuccino(intensity, milk), syrup(syrupType)
     {
+        coffeeName = "Syrup Cappuccino";
     }
 
-    void display() const override
+    void printCoffeeDetails() const override
     {
-        cout << "Coffee Name: " << coffeeName << ", Intensity: " << coffeeIntensity
-                << ", Milk: " << mlOfMilk << " ml, Syrup Type: " << syrup << endl;
+        Cappuccino::printCoffeeDetails();
+        cout << "Syrup Type: " << syrup << endl;
     }
 };
 
 class PumpkinSpiceLatte : public Cappuccino {
-    // PumpkinSpiceLatte inherits from Cappuccino
 protected:
     int mgOfPumpkinSpice;
-    const string coffeeName = "PumpkinSpiceLatte";
 
 public:
     PumpkinSpiceLatte(Intensity intensity, int milk, SyrupType syrupType, int spice)
         : Cappuccino(intensity, milk), mgOfPumpkinSpice(spice)
     {
+        coffeeName = "Pumpkin Spice Latte";
     }
 
-    void display() const override
+    void printCoffeeDetails() const override
     {
-        cout << "Coffee Name: " << coffeeName << ", Intensity: " << coffeeIntensity
-                << ", Water: " << " ml, Milk: " << mlOfMilk << " ml, Pumpkin Spice: "
-                << mgOfPumpkinSpice << " mg" << endl;
+        Cappuccino::printCoffeeDetails();
+        cout << "Pumpkin Spice: " << mgOfPumpkinSpice << " mg" << endl;
     }
 };
 
 int main()
 {
     Americano coffee1(NORMAL, 200);
-    Cappuccino coffee2(NORMAL, 150);
-    SyrupCappuccino coffee3(NORMAL, 200, VANILLA);
-    PumpkinSpiceLatte coffee4(NORMAL, 200, CARAMEL, 20);
+    Cappuccino coffee2(LIGHT, 150);
+    SyrupCappuccino coffee3(STRONG, 200, VANILLA);
+    PumpkinSpiceLatte coffee4(LIGHT, 200, CARAMEL, 20);
 
-    coffee1.display();
-    coffee2.display();
-    coffee3.display();
-    coffee4.display();
+    coffee1.printCoffeeDetails();
+    coffee2.printCoffeeDetails();
+    coffee3.printCoffeeDetails();
+    coffee4.printCoffeeDetails();
 
     return 0;
 }
