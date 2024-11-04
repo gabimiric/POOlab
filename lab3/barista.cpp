@@ -1,4 +1,6 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <string>
+
 using namespace std;
 
 enum Intensity {
@@ -22,13 +24,30 @@ protected:
     string coffeeName;
 
 public:
-    Coffee(Intensity intensity, const string &name) : coffeeIntensity(intensity), coffeeName(name)
-    {}
+    Coffee(Intensity intensity, const string &name) : coffeeIntensity(intensity), coffeeName(name) {}
+
+    string intensityToString() const
+    {
+        switch (coffeeIntensity)
+        {
+            case LIGHT: return "Light";
+            case NORMAL: return "Normal";
+            case STRONG: return "Strong";
+        }
+        return "Unknown";
+    }
+
+    virtual Coffee *makeCoffee() const
+    {
+        cout << "\nMaking " << coffeeName
+                << "\nIntensity set to " << intensityToString() << endl;
+        return new Coffee(*this);
+    }
 
     virtual void printCoffeeDetails() const
     {
         cout << "\nCoffee Name: " << coffeeName
-                << "\nIntensity: " << coffeeIntensity << endl;
+                << "\nCoffee Intensity: " << intensityToString() << endl;
     }
 };
 
@@ -37,8 +56,15 @@ protected:
     int mlOfWater;
 
 public:
-    Americano(Intensity intensity, int water) : Coffee(intensity, "Americano"), mlOfWater(water)
-    {}
+    Americano(Intensity intensity, int water)
+        : Coffee(intensity, "Americano"), mlOfWater(water) {}
+
+    Americano *makeAmericano() const
+    {
+        makeCoffee();
+        cout << "Adding " << mlOfWater << " ml of Water" << endl;
+        return new Americano(*this); // Return a new instance of Americano
+    }
 
     void printCoffeeDetails() const override
     {
@@ -52,8 +78,15 @@ protected:
     int mlOfMilk;
 
 public:
-    Cappuccino(Intensity intensity, int milk) : Coffee(intensity, "Cappuccino"), mlOfMilk(milk)
-    {}
+    Cappuccino(Intensity intensity, int milk)
+        : Coffee(intensity, "Cappuccino"), mlOfMilk(milk) {}
+
+    Cappuccino *makeCappuccino() const
+    {
+        makeCoffee();
+        cout << "Adding " << mlOfMilk << " ml of Milk" << endl;
+        return new Cappuccino(*this);
+    }
 
     void printCoffeeDetails() const override
     {
@@ -73,10 +106,31 @@ public:
         coffeeName = "Syrup Cappuccino";
     }
 
+    SyrupCappuccino *makeSyrupCappuccino() const
+    {
+        makeCappuccino();
+        cout << "Adding " << syrupTypeToString() << " syrup" << endl;
+        return new SyrupCappuccino(*this);
+    }
+
     void printCoffeeDetails() const override
     {
         Cappuccino::printCoffeeDetails();
-        cout << "Syrup Type: " << syrup << endl;
+        cout << "Syrup Type: " << syrupTypeToString() << endl;
+    }
+
+    string syrupTypeToString() const
+    {
+        switch (syrup)
+        {
+            case MACADAMIA: return "Macadamia";
+            case VANILLA: return "Vanilla";
+            case COCONUT: return "Coconut";
+            case CARAMEL: return "Caramel";
+            case CHOCOLATE: return "Chocolate";
+            case POPCORN: return "Popcorn";
+        }
+        return "Unknown";
     }
 };
 
@@ -85,10 +139,17 @@ protected:
     int mgOfPumpkinSpice;
 
 public:
-    PumpkinSpiceLatte(Intensity intensity, int milk, SyrupType syrupType, int spice)
+    PumpkinSpiceLatte(Intensity intensity, int milk, int spice)
         : Cappuccino(intensity, milk), mgOfPumpkinSpice(spice)
     {
         coffeeName = "Pumpkin Spice Latte";
+    }
+
+    PumpkinSpiceLatte *makePumpkinSpiceLatte() const
+    {
+        makeCappuccino();
+        cout << "Adding " << mgOfPumpkinSpice << " mg of Pumpkin Spice" << endl;
+        return new PumpkinSpiceLatte(*this);
     }
 
     void printCoffeeDetails() const override
@@ -100,15 +161,30 @@ public:
 
 int main()
 {
-    Americano coffee1(NORMAL, 200);
-    Cappuccino coffee2(LIGHT, 150);
-    SyrupCappuccino coffee3(STRONG, 200, VANILLA);
-    PumpkinSpiceLatte coffee4(LIGHT, 200, CARAMEL, 20);
+    // Create instances of different coffee types (Create Menu)
+    Americano menuAmericano(NORMAL, 200);
+    Cappuccino menuCappuccino(LIGHT, 150);
+    SyrupCappuccino menuSyrupCappuccino(NORMAL, 200, MACADAMIA);
+    PumpkinSpiceLatte menuPumpkinSpiceLatte(LIGHT, 200, 20);
 
-    coffee1.printCoffeeDetails();
-    coffee2.printCoffeeDetails();
-    coffee3.printCoffeeDetails();
-    coffee4.printCoffeeDetails();
+    // Call make functions and print details
+    Americano *madeAmericano = menuAmericano.makeAmericano();
+    // madeAmericano->printCoffeeDetails();
+
+    Cappuccino *madeCappuccino = menuCappuccino.makeCappuccino();
+    // madeCappuccino->printCoffeeDetails();
+
+    SyrupCappuccino *madeSyrupCappuccino = menuSyrupCappuccino.makeSyrupCappuccino();
+    // madeSyrupCappuccino->printCoffeeDetails();
+
+    PumpkinSpiceLatte *madePumpkinSpiceLatte = menuPumpkinSpiceLatte.makePumpkinSpiceLatte();
+    // madePumpkinSpiceLatte->printCoffeeDetails();
+
+    // Clean up dynamically allocated objects
+    delete madeAmericano;
+    delete madeCappuccino;
+    delete madeSyrupCappuccino;
+    delete madePumpkinSpiceLatte;
 
     return 0;
 }
