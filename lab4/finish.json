@@ -1,0 +1,12 @@
+{
+    "CONSUMPTION": {
+        "ELECTRIC": 418,
+        "GAS": 481
+    },
+    "DINING": 15,
+    "ELECTRIC": 14,
+    "GAS": 16,
+    "NOT_DINING": 15,
+    "PEOPLE": 20,
+    "ROBOTS": 10
+}

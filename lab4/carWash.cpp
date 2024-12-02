@@ -10,50 +10,49 @@ namespace fs = filesystem;
 
 int main()
 {
-    // Initialize services
-    PeopleDinner peopleDinnerService;
-    RobotDinner robotDinnerService;
-    ElectricStation electricStationService;
-    GasStation gasStationService;
+    // Initialize service objects for dining and fueling stations
+    PeopleDinner peopleDinnerService; // Service for serving dinner to people
+    RobotDinner robotDinnerService; // Service for serving dinner to robots
+    ElectricStation electricStationService; // Service for electric fueling
+    GasStation gasStationService; // Service for gas fueling
 
-    // Initialize car stations
+    // Initialize car stations for different types of cars (people/robots, electric/gas)
     CarStation peopleElectricStation(&peopleDinnerService, &electricStationService);
-    CarStation peopleGasStation(&peopleDinnerService, &gasStationService);
+    // Station for people with electric cars
+    CarStation peopleGasStation(&peopleDinnerService, &gasStationService); // Station for people with gas cars
     CarStation robotElectricStation(&robotDinnerService, &electricStationService);
-    CarStation robotGasStation(&robotDinnerService, &gasStationService);
+    // Station for robots with electric cars
+    CarStation robotGasStation(&robotDinnerService, &gasStationService); // Station for robots with gas cars
 
-    // Initialize semaphore
-    Semaphore semaphore(&peopleElectricStation, &peopleGasStation, &robotElectricStation, &robotGasStation);
+    string directoryPath = "./queue"; // Path to the directory where car JSON files will be read
 
-    // Read car JSON files from the "cars" folder
-    const string folderPath = "./queue"; // Adjust folder path if needed
-    for (const auto &entry: fs::directory_iterator(folderPath))
+    // Initialize the Semaphore object which manages the car processing
+    Semaphore semaphore(&peopleElectricStation, &peopleGasStation, &robotElectricStation, &robotGasStation,
+                        directoryPath);
+
+    // Start processing cars in a separate thread to allow parallel execution
+    thread processThread([&semaphore]()
     {
-        if (entry.is_regular_file() && entry.path().extension() == ".json")
-        {
-            try
-            {
-                Car car = CarFactory::createCarFromJSON(entry.path().string());
-                semaphore.addCarToQueue(car);
-            } catch (const exception &e)
-            {
-                cerr << "Error processing file " << entry.path() << ": " << e.what() << endl;
-            }
-        }
-    }
+        semaphore.startProcessing(); // Start the semaphore processing in a separate thread
+    });
 
-    // Process cars in the semaphore
-    semaphore.processCars();
+    // Run the Python script that generates car JSONs in a separate thread
+    // This ensures that the car processing does not block the generation of new files
+    thread pythonScriptThread([]()
+    {
+        system("python3 generator.py"); // Run the Python script to generate the car JSON files
+    });
 
-    // Summary of served dinner counts
-    cout << "\nSummary of service:\n";
-    cout << "People served dinner: " << peopleDinnerService.getServedPeople() << endl;
-    cout << "Robots served dinner: " << robotDinnerService.getServedRobots() << endl;
-    cout << "Electric cars refueled: " << electricStationService.getFueledElectric() << " with " <<
-    electricStationService.getUsedElectric() << " kWh." << endl;
-    cout << "Gas cars refueled: " << gasStationService.getFueledGas() << " with " << gasStationService.getUsedGas() <<
-    " litres." << endl;
+    // Wait for the Python script to finish execution (join the thread)
+    pythonScriptThread.join(); // Block until the Python script completes
 
-    return 0;
+    // Wait for the semaphore processing thread to finish
+    // The car processing will continue in the background until it's completed
+    processThread.join(); // Block until the car processing finishes
+
+    // After processing all cars, write the final results to a JSON file
+    // This will include the statistics of the car processing
+    semaphore.finishProcess(peopleDinnerService, robotDinnerService, gasStationService, electricStationService);
+
+    return 0; // Return 0 to indicate successful execution
 }
-
